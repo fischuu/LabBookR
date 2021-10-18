@@ -1,10 +1,10 @@
 Package: LabBookR
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Organising Labnotes and ToDos via R
+Version: 0.1.1
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+    person("Daniel", "Fischer", , "daniel.fischer@luke.fi", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Organising Labnotes and ToDos via R.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
