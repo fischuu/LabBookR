@@ -26,7 +26,6 @@ createNewProject <- function(title, folder, author){
     '---',
     paste0('title: "',title,'"'),
     paste0('author: "',author,'"'),
-    #'date: "`r format(Sys.time(), '\%d \%B, \%Y')`"',
     'output:',
     '  html_document:',
     '  toc: true',
