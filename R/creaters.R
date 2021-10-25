@@ -66,8 +66,12 @@ createNewProject <- function(title, folder, author){
     ''
   )
   file <- paste0(gsub(" ","_",title), ".Rmd")
-  fileConn <- file(file.path(folder, file))
-  writeLines(blankProject, fileConn)
-  close(fileConn)
+  if(file.exists(file.path(folder, file))){
+    stop("Project exists already, nothing was done!")
+  } else {
+    fileConn <- file(file.path(folder, file))
+    writeLines(blankProject, fileConn)
+    close(fileConn)
+  }
 }
 
