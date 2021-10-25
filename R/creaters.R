@@ -1,3 +1,64 @@
+#' Create Complete LabBook
+#'
+#' Create the lab book
+#' @param labBook Path to LabBookR folder
+#' @return A RMarkdown file
+#' @export
+createLabBook <- function(labBook=NULL){
+  # Input checks
+  if(is.null(labBook)) stop("Please provide a labBook address")
+
+  projects <- list.files(labBook, pattern="*.Rmd")
+
+  projectRMD <- list()
+  availDates <- structure(list(), class="Date")
+
+  # Import all projects
+  for(i in 1:length(projects)){
+    projectRMD[[i]] <- readLines(file.path(labBook, projects[i]))
+  }
+
+  # Filter out all non- Progress related lines
+  for(i in 1:length(projects)){
+    progressStart <- which(projectRMD[[i]]=='# Progress Notes')
+    progressEnd <- length(projectRMD[[i]])
+    if(progressStart>=progressEnd){
+      projectRMD[[i]] <- "NA"
+    } else {
+      projectRMD[[i]] <- projectRMD[[i]][(progressStart+1): progressEnd]
+    }
+  }
+  # Now get all the available dates
+  for(i in 1:length(projects)){
+    availDates <- c(availDates, as.Date(gsub("## ", "", projectRMD[[i]][grep("##", projectRMD[[i]])]), format="%Y-%m-%d"))
+  }
+  # Unique and sort the dates
+  availDates <- unique(availDates)
+  availDates <- availDates[order(availDates, decreasing=TRUE)]
+
+  # Now concatenate the progress entries based on the timestamps
+  labBook <- c()
+  for(i in 1:length(availDates)){
+    # Find projects with that particular timestamp and loop through them
+    tmpProject <- grep(availDates[i], projectRMD)
+    for(j in 1:length(tmpProject)){
+     dateStart <- grep(paste0("## ",as.character(availDates[i])), projectRMD[[tmpProject[j]]])
+     otherDates <- grep("## ", projectRMD[[tmpProject[j]]])
+     dateEnd <- otherDates[min(which(otherDates==dateStart)+1, length(otherDates))]
+     if(dateStart==dateEnd){
+       labBook <- c(labBook, c(projects[tmpProject], projectRMD[[tmpProject[j]]][dateStart:length(projectRMD[[tmpProject[j]]])]))
+     } else {
+       labBook <- c(labBook, c(projects[tmpProject], projectRMD[[tmpProject[j]]][dateStart:dateEnd]))
+     }
+    }
+  }
+
+  labBook
+}
+
+debug(createLabBook)
+createLabBook("/home/fischuu/git/LabBook/")
+undebug(createLabBook)
 #' Create Project Report
 #'
 #' Create a project report
