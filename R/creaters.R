@@ -4,7 +4,7 @@
 #' @param labBook Path to LabBookR folder
 #' @return A RMarkdown file
 #' @export
-createLabBook <- function(labBook=NULL, title="My LabBook", author="Daniel Fischer"){
+createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", author="Daniel Fischer"){
   # Input checks
   if(is.null(labBook)) stop("Please provide a labBook address")
 
@@ -37,6 +37,11 @@ createLabBook <- function(labBook=NULL, title="My LabBook", author="Daniel Fisch
   availDates <- unique(availDates)
   availDates <- availDates[order(availDates, decreasing=TRUE)]
 
+  # Create data matrices to store information
+  projectsPerDay <- matrix(0, nrow=length(availDates), ncol=length(projects))
+  rownames(projectsPerDay) <- as.character(availDates)
+  colnames(projectsPerDay) <- gsub(".Rmd","",projects)
+
   # Now concatenate the progress entries based on the timestamps
   labBook.out <- c()
   for(i in 1:length(availDates)){
@@ -60,6 +65,16 @@ createLabBook <- function(labBook=NULL, title="My LabBook", author="Daniel Fisch
                                projectRMD[[tmpProject[j]]][(dateStart+1):(dateEnd-1)])
      }
      newDate <- FALSE
+     projectsPerDay[i,tmpProject[j]] <- 1
+    }
+  }
+
+  if(!sortedByDate){
+    headLine <- c("",paste0("# ", gsub(".Rmd","",projects[1])))
+    labBook.out <- c(headLine, projectRMD[[1]])
+    for(i in 2:length(projects)){
+      headLine <- c("",paste0("# ", gsub(".Rmd","",projects[i])))
+      labBook.out <- c(labBook.out, headLine, projectRMD[[i]])
     }
   }
 
@@ -90,6 +105,18 @@ createLabBook <- function(labBook=NULL, title="My LabBook", author="Daniel Fisch
     writeLines(labBook.out, fileConn)
   close(fileConn)
   rmarkdown::render(file.path(labBook, "labBook.complete.Rmd"), c("html_document","pdf_document"))
+
+  # Quick and dirty copy+paste from here, with minor modifications:
+  # https://stackoverflow.com/questions/65469546/how-to-include-row-col-names-in-image-r
+  image.real <- function(mat) {
+    mat <- mat[,ncol(mat):1]
+    image(mat, axes = FALSE)
+    axis(1, at = seq(0, 1, length = nrow(mat)), labels = rownames(mat), las=2)
+    axis(2, at = seq(0, 1, length = ncol(mat)), labels = colnames(mat), las=2)
+    box()
+  }
+  par(oma=c(4,15,1,1))
+  image.real(projectsPerDay)
 }
 
 #' Create Project Report

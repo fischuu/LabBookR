@@ -4,7 +4,12 @@
 \alias{createLabBook}
 \title{Create Complete LabBook}
 \usage{
-createLabBook(labBook = NULL, title = "My LabBook", author = "Daniel Fischer")
+createLabBook(
+  labBook = NULL,
+  sortedByDate = TRUE,
+  title = "My LabBook",
+  author = "Daniel Fischer"
+)
 }
 \arguments{
 \item{labBook}{Path to LabBookR folder}
