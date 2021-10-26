@@ -4,11 +4,12 @@
 #' @param labBook Path to LabBookR folder
 #' @return A RMarkdown file
 #' @export
-createLabBook <- function(labBook=NULL){
+createLabBook <- function(labBook=NULL, title="My LabBook", author="Daniel Fischer"){
   # Input checks
   if(is.null(labBook)) stop("Please provide a labBook address")
 
   projects <- list.files(labBook, pattern="*.Rmd")
+  if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
 
   projectRMD <- list()
   availDates <- structure(list(), class="Date")
@@ -37,28 +38,60 @@ createLabBook <- function(labBook=NULL){
   availDates <- availDates[order(availDates, decreasing=TRUE)]
 
   # Now concatenate the progress entries based on the timestamps
-  labBook <- c()
+  labBook.out <- c()
   for(i in 1:length(availDates)){
     # Find projects with that particular timestamp and loop through them
     tmpProject <- grep(availDates[i], projectRMD)
+    newDate <- TRUE
     for(j in 1:length(tmpProject)){
      dateStart <- grep(paste0("## ",as.character(availDates[i])), projectRMD[[tmpProject[j]]])
      otherDates <- grep("## ", projectRMD[[tmpProject[j]]])
      dateEnd <- otherDates[min(which(otherDates==dateStart)+1, length(otherDates))]
-     if(dateStart==dateEnd){
-       labBook <- c(labBook, c(projects[tmpProject], projectRMD[[tmpProject[j]]][dateStart:length(projectRMD[[tmpProject[j]]])]))
+     if(newDate){
+       headLine <- c("",paste0("# ", gsub("## ", "",projectRMD[[tmpProject[j]]][dateStart])),paste0("## ", gsub(".Rmd","",projects[tmpProject[j]])))
      } else {
-       labBook <- c(labBook, c(projects[tmpProject], projectRMD[[tmpProject[j]]][dateStart:dateEnd]))
+       headLine <- c("",paste0("## ", gsub(".Rmd","",projects[tmpProject[j]])))
      }
+
+     if(dateStart==dateEnd){
+       labBook.out <- c(labBook.out, headLine, projectRMD[[tmpProject[j]]][(dateStart+1):length(projectRMD[[tmpProject[j]]])])
+     } else {
+       labBook.out <- c(labBook.out, headLine,
+                               projectRMD[[tmpProject[j]]][(dateStart+1):(dateEnd-1)])
+     }
+     newDate <- FALSE
     }
   }
 
-  labBook
+  header <- c('---',
+              paste0('title: "',title,'"'),
+              paste0('author: "',author,'"'),
+              'output:',
+              '  html_document:',
+              '      toc: true',
+              '      toc_depth: 4',
+              '      toc_float:',
+              '        toc_collapsed: true',
+              '  pdf_document:',
+              '      toc: true',
+              '      toc_depth: 4',
+              'number_sections: false',
+              'theme: lumen',
+              'df_print: paged',
+              'code_folding: hide',
+              '---',
+              '',
+              '```{r setup, include=FALSE}',
+              'knitr::opts_chunk$set(echo = TRUE,',
+              '                      eval = FALSE)',
+              '```')
+  labBook.out <- c(header,labBook.out)
+  fileConn <- file(file.path(labBook, "labBook.complete.Rmd"))
+    writeLines(labBook.out, fileConn)
+  close(fileConn)
+  rmarkdown::render(file.path(labBook, "labBook.complete.Rmd"), c("html_document","pdf_document"))
 }
 
-debug(createLabBook)
-createLabBook("/home/fischuu/git/LabBook/")
-undebug(createLabBook)
 #' Create Project Report
 #'
 #' Create a project report
@@ -89,10 +122,10 @@ createNewProject <- function(title, folder, author){
     paste0('author: "',author,'"'),
     'output:',
     '  html_document:',
-    '  toc: true',
-    '  toc_depth: 4',
-    '  toc_float:',
-    '    toc_collapsed: true',
+    '      toc: true',
+    '      toc_depth: 4',
+    '      toc_float:',
+    '        toc_collapsed: true',
     'number_sections: false',
     'theme: lumen',
     'df_print: paged',
