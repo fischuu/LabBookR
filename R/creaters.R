@@ -163,7 +163,7 @@ createNewProject <- function(title, folder, author){
     'knitr::opts_chunk$set(echo = TRUE,',
     '                      eval = FALSE)',
     '```',
-    '```{}',
+    '```{bash, echo=FALSE, include=FALSE}',
     '# Instructions to enter ToDo-list items',
     '# Follow the format:',
     '@ IncomingDate @ DueDate @ PlannedDate @ RequiredTime @ Ready @ Description',
