@@ -31,7 +31,9 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   }
   # Now get all the available dates
   for(i in 1:length(projects)){
-    availDates <- c(availDates, as.Date(gsub("## ", "", projectRMD[[i]][grep("##", projectRMD[[i]])]), format="%Y-%m-%d"))
+    addThis <- as.Date(gsub("## ", "", projectRMD[[i]][grep("^##", projectRMD[[i]])]), format="%Y-%m-%d")
+    if(sum(is.na(addThis))>0) stop("Malformated date in project:", projects[i])
+    availDates <- c(availDates, addThis)
   }
   # Unique and sort the dates
   availDates <- unique(availDates)
