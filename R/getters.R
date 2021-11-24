@@ -44,13 +44,14 @@ getToDo.internal <- function(x){
 }
 
 #' @export
-getMyTODO <- function(folder, verbose=TRUE){
+getMyTODO <- function(folder, verbose=TRUE, sorting=c("Incoming", "Due", "Scheduled")){
    output <- c()
-   #projectFiles <- list.files(folder, pattern = "*.Rmd")
    projects <- getMyProjects(folder)
 
    project.wo.todo <- projects[projects$ToDo=="NO",]
    projects <- projects[-which(projects$ToDo=="NO"),]
+
+   sorting <- match.arg(sorting)
 
    if(nrow(project.wo.todo)>0){
      if(verbose){
@@ -77,11 +78,61 @@ getMyTODO <- function(folder, verbose=TRUE){
      }
    }
 
-   output
+   output[,1] <- as.Date(output[,1], format="%Y.%m.%d")
+   output[,2] <- as.Date(output[,2], format="%Y.%m.%d")
+   output[,3] <- as.Date(output[,3], format="%Y.%m.%d")
+
+   if(sorting=="Incoming"){
+     output <- output[order(output[,1]),]
+   } else if (sorting=="Due"){
+     output <- output[order(output[,2]),]
+   } else if(sorting=="Scheduled"){
+     output <- output[order(output[,3]),]
+   }
+  rownames(output) <- NULL
+  output
 }
 
+#' @export
+getTasksPerWeek <- function(folder, plot=TRUE){
+  TODO <- getMyTODO(folder=folder, verbose=FALSE)
 
+  years <- unique(format(TODO$Incoming, "%Y"))
 
+  incoming.week <- format(TODO$Incoming, "%V")
+  due.week <- format(TODO$DueData, "%V")
+  scheduled.week <- format(TODO$Scheduled, "%V")
 
+  incoming.year <- format(TODO$Incoming, "%Y")
+  due.year <- format(TODO$DueData, "%Y")
+  scheduled.year <- format(TODO$Scheduled, "%Y")
+
+  incoming <- paste0(incoming.year,".",incoming.week)
+  due <- paste0(due.year,".",due.week)
+  scheduled <- paste0(scheduled.year,".",scheduled.week)
+
+  time.formatted <- as.POSIXlt(TODO$TimeReq,format="%H:%M")
+
+  time <- (time.formatted$hour*60 + time.formatted$min)/60
+
+  tmp <- table(scheduled, time)
+  tmp <- as.numeric(colnames(tmp))* tmp
+  timePerWeek <- apply(tmp,1,sum)
+
+  if(plot){
+    par(mfrow=c(2,2))
+
+    barplot(table(incoming), las=2, main="Incoming tasks per week")
+    barplot(table(due), las=2, main="Due tasks per week")
+    barplot(table(scheduled), las=2, main="Scheduled tasks per week")
+    barplot(timePerWeek, las=2, main="Scheduled working time per week")
+  }
+
+  output <- list(incoming = table(incoming),
+                 due = table(due),
+                 scheduled = table(scheduled),
+                 timePerWeek = timePerWeek)
+  output
+}
 
 

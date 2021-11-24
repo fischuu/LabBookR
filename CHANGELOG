@@ -3,6 +3,8 @@
 List of changes:
 --------------------------------------------------------------------------------
 
+0.1.13: Visualisation for the tasks added (createTasksPerWeek-function)
+0.1.12: ToDo lists can now be sorted according to Due, Incoming and Scheduled
 0.1.11: Additinal input checks for createLabBook section
 0.1.10: Output format from createLbBook can now be specificed.
 0.1.9 : createTODOreport function added
