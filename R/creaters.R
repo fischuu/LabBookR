@@ -121,6 +121,68 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   image.real(projectsPerDay)
 }
 
+#' Create Complete ToDoList
+#'
+#' Create the ToDo List
+#' @param labBook Path to LabBookR folder
+#' @return A RMarkdown file
+#' @export
+#' @import kableExtra
+createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", author="Daniel Fischer"){
+  # Input checks
+  if(is.null(labBook)) stop("Please provide a labBook address")
+
+  projects <- list.files(labBook, pattern="*.Rmd")
+  if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
+
+  todo <- getMyTODO(folder=labBook)
+
+#  todo.kbl <- kbl(todo)
+
+  todo.kbl <- todo %>%
+                kbl() %>%
+                kable_styling()
+
+  labBook.out <- c("\n", todo.kbl,"\n")
+
+  header <- c('---',
+              paste0('title: "',title,'"'),
+              paste0('author: "',author,'"'),
+              'output:',
+              '  html_document:',
+              '      toc: true',
+              '      toc_depth: 4',
+              '      toc_float:',
+              '        toc_collapsed: true',
+              '  pdf_document:',
+              '      toc: true',
+              '      toc_depth: 4',
+              'number_sections: false',
+              'theme: lumen',
+              'df_print: paged',
+              'code_folding: hide',
+              '---',
+              '',
+              '```{r setup, include=FALSE}',
+              'knitr::opts_chunk$set(echo = TRUE,',
+              '                      eval = FALSE)',
+              '```',
+              '',
+              '<style type="text/css">',
+                'div.main-container {',
+                  'max-width: 1800px;',
+                  'margin-left: auto;',
+                  'margin-right: auto;',
+                '}',
+              '</style>'
+  )
+  labBook.out <- c(header,labBook.out)
+  fileConn <- file(file.path(labBook, "labBook.ToDo.Rmd"))
+  writeLines(labBook.out, fileConn)
+  close(fileConn)
+  rmarkdown::render(file.path(labBook, "labBook.ToDo.Rmd"), c("html_document","pdf_document"))
+
+}
 #' Create Project Report
 #'
 #' Create a project report
