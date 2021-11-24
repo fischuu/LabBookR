@@ -11,6 +11,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 
   projects <- list.files(labBook, pattern="*.Rmd")
   if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
+  if(length(which(projects=="labBook.ToDo.Rmd"))>0) projects <- projects[-which(projects=="labBook.ToDo.Rmd")]
 
   if(output=="html+pdf" || output=="pdf+html"){
     output_render <- c("html_document","pdf_document")
@@ -32,6 +33,10 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   for(i in 1:length(projects)){
     progressStart <- which(projectRMD[[i]]=='# Progress Notes')
     progressEnd <- length(projectRMD[[i]])
+
+    if(length(progressStart)==0) stop("There is a problem with the start of the ## Progress notes section in project ", projects[i])
+    if(length(progressEnd)==0) stop("There is a problem with the end of the ## Progress notes section in project ", projects[i])
+
     if(progressStart>=progressEnd){
       projectRMD[[i]] <- "NA"
     } else {
@@ -152,6 +157,7 @@ createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", a
 
   projects <- list.files(labBook, pattern="*.Rmd")
   if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
+  if(length(which(projects=="labBook.ToDo.Rmd"))>0) projects <- projects[-which(projects=="labBook.ToDo.Rmd")]
 
   todo <- getMyTODO(folder=labBook)
 

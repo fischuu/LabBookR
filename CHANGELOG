@@ -3,6 +3,7 @@
 List of changes:
 --------------------------------------------------------------------------------
 
+0.1.11: Additinal input checks for createLabBook section
 0.1.10: Output format from createLbBook can now be specificed.
 0.1.9 : createTODOreport function added
 0.1.8 : ToDo section checkers added to createMyTODO function
