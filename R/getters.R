@@ -44,14 +44,29 @@ getToDo.internal <- function(x){
 }
 
 #' @export
-getMyTODO <- function(folder){
+getMyTODO <- function(folder, verbose=TRUE){
    output <- c()
-   projectFiles <- list.files(folder, pattern = "*.Rmd")
+   #projectFiles <- list.files(folder, pattern = "*.Rmd")
    projects <- getMyProjects(folder)
+
+   project.wo.todo <- projects[projects$ToDo=="NO",]
+   projects <- projects[-which(projects$ToDo=="NO"),]
+
+   if(nrow(project.wo.todo)>0){
+     if(verbose){
+       cat("Following projects without ToDo are not displayed:\n")
+       print(project.wo.todo)
+     }
+   }
+
+
    for(i in 1:nrow(projects)){
-     tmp.project <- readLines(file.path(folder, projectFiles[i]))
+     tmp.project <- readLines(file.path(folder, projects$file[i]))
      todo.start <- grep("# ToDo",tmp.project)
      todo.end <- grep("# Progress Notes",tmp.project) - 1
+
+     if(length(todo.start)==0) stop ("No ToDo section start found in project ", projects$title[i])
+     if(length(todo.start)==0) stop ("No ToDo section end found in project ", projects$title[i])
 
      for(j in (todo.start+1):todo.end){
        if(tmp.project[j]!=""){

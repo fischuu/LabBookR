@@ -3,6 +3,8 @@
 List of changes:
 --------------------------------------------------------------------------------
 
+0.1.9 : createTODOreport function added
+0.1.8 : ToDo section checkers added to createMyTODO function
 0.1.7 : Dates for the lab book are now only searched, when they start in the row
 0.1.6 : Check for date in createLabBook added
 0.1.5 : The ToDo entry instructions are not printed anymore into the project report
