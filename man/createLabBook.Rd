@@ -8,11 +8,14 @@ createLabBook(
   labBook = NULL,
   sortedByDate = TRUE,
   title = "My LabBook",
-  author = "Daniel Fischer"
+  author = "Daniel Fischer",
+  output = "html+pdf"
 )
 }
 \arguments{
 \item{labBook}{Path to LabBookR folder}
+
+\item{output}{Define output format, options: "html+pdf", "html", "pdf"}
 }
 \value{
 A RMarkdown file

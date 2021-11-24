@@ -2,14 +2,23 @@
 #'
 #' Create the lab book
 #' @param labBook Path to LabBookR folder
+#' @param output Define output format, options: "html+pdf", "html", "pdf"
 #' @return A RMarkdown file
 #' @export
-createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", author="Daniel Fischer"){
+createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", author="Daniel Fischer", output="html+pdf"){
   # Input checks
   if(is.null(labBook)) stop("Please provide a labBook address")
 
   projects <- list.files(labBook, pattern="*.Rmd")
   if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
+
+  if(output=="html+pdf" || output=="pdf+html"){
+    output_render <- c("html_document","pdf_document")
+  } else if (output == "html"){
+    output_render <- c("html_document")
+  } else if (output == "pdf"){
+    output_render <- c("pdf_document")
+  }
 
   projectRMD <- list()
   availDates <- structure(list(), class="Date")
@@ -106,7 +115,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   fileConn <- file(file.path(labBook, "labBook.complete.Rmd"))
     writeLines(labBook.out, fileConn)
   close(fileConn)
-  rmarkdown::render(file.path(labBook, "labBook.complete.Rmd"), c("html_document","pdf_document"))
+  rmarkdown::render(file.path(labBook, "labBook.complete.Rmd"), output_render)
 
   # Quick and dirty copy+paste from here, with minor modifications:
   # https://stackoverflow.com/questions/65469546/how-to-include-row-col-names-in-image-r
@@ -125,12 +134,21 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 #'
 #' Create the ToDo List
 #' @param labBook Path to LabBookR folder
+#' #' @param output Define output format, options: "html+pdf", "html", "pdf"
 #' @return A RMarkdown file
 #' @export
 #' @import kableExtra
-createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", author="Daniel Fischer"){
+createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", author="Daniel Fischer", output="html+pdf"){
   # Input checks
   if(is.null(labBook)) stop("Please provide a labBook address")
+
+  if(output=="html+pdf" || output=="pdf+html"){
+    output_render <- c("html_document","pdf_document")
+  } else if (output == "html"){
+    output_render <- c("html_document")
+  } else if (output == "pdf"){
+    output_render <- c("pdf_document")
+  }
 
   projects <- list.files(labBook, pattern="*.Rmd")
   if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
@@ -180,7 +198,7 @@ createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", a
   fileConn <- file(file.path(labBook, "labBook.ToDo.Rmd"))
   writeLines(labBook.out, fileConn)
   close(fileConn)
-  rmarkdown::render(file.path(labBook, "labBook.ToDo.Rmd"), c("html_document","pdf_document"))
+  rmarkdown::render(file.path(labBook, "labBook.ToDo.Rmd"), output_render)
 
 }
 #' Create Project Report

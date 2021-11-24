@@ -3,6 +3,7 @@
 List of changes:
 --------------------------------------------------------------------------------
 
+0.1.10: Output format from createLbBook can now be specificed.
 0.1.9 : createTODOreport function added
 0.1.8 : ToDo section checkers added to createMyTODO function
 0.1.7 : Dates for the lab book are now only searched, when they start in the row
