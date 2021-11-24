@@ -2,10 +2,12 @@
 
 export(checkLabBook)
 export(createLabBook)
+export(createLabBookConfig)
 export(createNewProject)
 export(createProjectReport)
 export(createTODOreport)
 export(getMyProjects)
 export(getMyTODO)
 export(getTasksPerWeek)
+export(loadLabBookConfig)
 import(kableExtra)

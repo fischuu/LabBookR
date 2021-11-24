@@ -284,3 +284,19 @@ createNewProject <- function(title, folder, author){
   }
 }
 
+#' @export
+createLabBookConfig <- function(folder, author, overwrite=FALSE){
+   LabBookR.config <- data.frame(folder=folder,
+                                 author=author)
+
+   if(file.exists(file.path(folder, ".LabBookR.config"))){
+     if(overwrite){
+       write.table(LabBookR.config, file=file.path(folder, ".LabBookR.config"))
+     } else {
+       stop("Config file exists already, please set 'overwrite=TRUE' if you want to overwrite existing configuration")
+     }
+   } else {
+     write.table(LabBookR.config, file=file.path(folder, ".LabBookR.config"))
+   }
+}
+

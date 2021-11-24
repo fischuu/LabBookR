@@ -5,6 +5,13 @@
 #' @return a list of projects
 #' @export
 getMyProjects <-  function(folder){
+
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
   projectFiles <- list.files(folder, pattern = "*.Rmd")
   projects.list <- list()
 
@@ -45,6 +52,13 @@ getToDo.internal <- function(x){
 
 #' @export
 getMyTODO <- function(folder, verbose=TRUE, sorting=c("Incoming", "Due", "Scheduled")){
+
+   if( exists("LabBookR.config.folder")){
+     folder <- LabBookR.config.folder
+   } else {
+     stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+   }
+
    output <- c()
    projects <- getMyProjects(folder)
 
@@ -95,6 +109,13 @@ getMyTODO <- function(folder, verbose=TRUE, sorting=c("Incoming", "Due", "Schedu
 
 #' @export
 getTasksPerWeek <- function(folder, plot=TRUE){
+
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
   TODO <- getMyTODO(folder=folder, verbose=FALSE)
 
   years <- unique(format(TODO$Incoming, "%Y"))
