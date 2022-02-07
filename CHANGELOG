@@ -3,8 +3,11 @@
 List of changes:
 --------------------------------------------------------------------------------
 
-0.1.15: Bugfix in getMyTODO(). Scripts crashed when all projects had a ToDo
-0.1.14: checkLabBooks() respects now the labbook configuration
+0.1.18: Partial argument matching added for addToDo project option
+0.1.17: verbose option added to loadLabBookConfig()
+0.1.16: Default settings for addToDo() added to the LabBookConfig
+0.1.15: Function addToDo() added
+0.1.14: Bugfix: getMyProjects() crashed when used without labbook config file.
 0.1.13: Visualisation for the tasks added (createTasksPerWeek-function)
 0.1.12: ToDo lists can now be sorted according to Due, Incoming and Scheduled
 0.1.11: Additinal input checks for createLabBook section
