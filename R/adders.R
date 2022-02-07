@@ -13,6 +13,9 @@ addToDo <-  function(folder=NA, project=NA, entryDate=NA, dueDate=NA, scheduledD
     if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
   }
 
+  all_projects <- getMyProjects(folder)
+  project <- match.arg(project, all_projects$title)
+
   project_file <- paste0(project,".Rmd")
 
   if(!file.exists(file.path(folder, project_file))) stop("Folder/project not found, please check the correct names. E.g. run getMyProjects() to receive a full list of projects.")
@@ -27,22 +30,36 @@ addToDo <-  function(folder=NA, project=NA, entryDate=NA, dueDate=NA, scheduledD
   }
 
   if(is.na(dueDate)){
-    dueDate <- " "
+    if( exists("LabBookR.config.dueDate")){
+      dueDatePlus <- LabBookR.config.dueDate
+      dueDate <- as.character(as.Date(entryDate) + dueDatePlus)
+    } else {
+      dueDate <- " "
+    }
   }
 
   if(is.na(scheduledDate)){
-    scheduledDate <- " "
+    if( exists("LabBookR.config.scheduledDate")){
+      scheduledDatePlus <- LabBookR.config.scheduledDate
+      scheduledDate <- as.character(as.Date(entryDate) + scheduledDatePlus)
+    } else {
+      scheduledDate <- " "
+    }
   }
 
   if(is.na(reqTime)){
-    reqTime <- " "
+    if(exists("LabBookR.config.reqTime")){
+      reqTime <- LabBookR.config.reqTime
+    } else {
+      reqTime <- " "
+    }
   }
 
   if(is.na(description)){
     stop("No task description provided, please describe your task.")
   }
 
-  todo_entry <- paste(c("@ ", entryDate, dueDate, scheduledDate, reqTime,"FALSE", description), collapse=" @ ")
+  todo_entry <- paste0("@ ", paste(c(entryDate, dueDate, scheduledDate, reqTime,"FALSE", description), collapse=" @ "))
 
   project_content_new <- c(project_content[1:(todo.end-1)], todo_entry, project_content[(todo.end):length(project_content)])
 
