@@ -23,7 +23,7 @@ addToDo <-  function(folder=NA, project=NA, entryDate=NA, dueDate=NA, scheduledD
 
   # Create the new entry
   if(is.na(entryDate)){
-    entryDate <- " "
+    entryDate <- format(Sys.time(), "%Y-%m-%d")
   }
 
   if(is.na(dueDate)){
