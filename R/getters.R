@@ -51,12 +51,12 @@ getToDo.internal <- function(x){
 }
 
 #' @export
-getMyTODO <- function(folder, verbose=TRUE, sorting=c("Incoming", "Due", "Scheduled")){
+getMyTODO <- function(folder=NA, verbose=TRUE, sorting=c("Incoming", "Due", "Scheduled")){
 
    if( exists("LabBookR.config.folder")){
      folder <- LabBookR.config.folder
    } else {
-     stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+     if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
    }
 
    output <- c()
@@ -108,12 +108,12 @@ getMyTODO <- function(folder, verbose=TRUE, sorting=c("Incoming", "Due", "Schedu
 }
 
 #' @export
-getTasksPerWeek <- function(folder, plot=TRUE){
+getTasksPerWeek <- function(folder=NA, plot=TRUE){
 
   if( exists("LabBookR.config.folder")){
     folder <- LabBookR.config.folder
   } else {
-    stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+    if(is.na(folder))stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
   }
 
   TODO <- getMyTODO(folder=folder, verbose=FALSE)
