@@ -13,6 +13,7 @@ getMyProjects <-  function(folder){
   }
 
   projectFiles <- list.files(folder, pattern = "*.Rmd")
+
   projects.list <- list()
 
   projects <- data.frame(title=character(),
@@ -63,7 +64,7 @@ getMyTODO <- function(folder, verbose=TRUE, sorting=c("Incoming", "Due", "Schedu
    projects <- getMyProjects(folder)
 
    project.wo.todo <- projects[projects$ToDo=="NO",]
-   projects <- projects[-which(projects$ToDo=="NO"),]
+   if(length(which(projects$ToDo=="NO"))>0) projects <- projects[-which(projects$ToDo=="NO"),]
 
    sorting <- match.arg(sorting)
 

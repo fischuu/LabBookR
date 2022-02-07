@@ -3,7 +3,14 @@
 #' This function checks, if the lab book is properly configured and prepared
 #' @return A matrix shoing the test results
 #' @export
+
 checkLabBook <- function(folder){
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
   cat("Checking for integrity and issues within the LabBook\n")
   cat("----------------------------------------------------\n")
   cat("Folder     : ")
