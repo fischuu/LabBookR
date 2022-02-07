@@ -9,7 +9,7 @@ getMyProjects <-  function(folder){
   if( exists("LabBookR.config.folder")){
     folder <- LabBookR.config.folder
   } else {
-    stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+    if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
   }
 
   projectFiles <- list.files(folder, pattern = "*.Rmd")
