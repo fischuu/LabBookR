@@ -285,9 +285,12 @@ createNewProject <- function(title, folder, author){
 }
 
 #' @export
-createLabBookConfig <- function(folder, author, overwrite=FALSE){
+createLabBookConfig <- function(folder, author, dueDate=28, scheduledDate=21, reqTime="2:00", overwrite=FALSE){
    LabBookR.config <- data.frame(folder=folder,
-                                 author=author)
+                                 author=author,
+                                 dueDate=dueDate,
+                                 scheduledDate=scheduledDate,
+                                 reqTime=reqTime)
 
    if(file.exists(file.path(folder, ".LabBookR.config"))){
      if(overwrite){

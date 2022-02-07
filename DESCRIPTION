@@ -1,6 +1,6 @@
 Package: LabBookR
 Title: Organising Labnotes and ToDos via R
-Version: 0.1.15
+Version: 0.1.18
 Authors@R: 
     person("Daniel", "Fischer", , "daniel.fischer@luke.fi", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
