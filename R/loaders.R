@@ -1,7 +1,8 @@
 #' @export
-loadLabBookConfig <- function(folder, verbose=TRUE){
-  tmp <- read.table( file=file.path(folder, ".LabBookR.config"), stringsAsFactor=FALSE)
+loadLabBookConfig <- function(labBook, verbose=TRUE){
+  tmp <- read.table( file=file.path(labBook, ".LabBookR.config"), stringsAsFactor=FALSE)
   LabBookR.config.folder <<- tmp$folder
+  LabBookR.config.labBook <<- tmp$labBook
   LabBookR.config.author <<- tmp$author
   LabBookR.config.dueDate <<- tmp$dueDate
   LabBookR.config.scheduledDate <<- tmp$scheduledDate
@@ -11,6 +12,7 @@ loadLabBookConfig <- function(folder, verbose=TRUE){
     cat("LabBook configuration loaded:\n")
     cat("-----------------------------------\n")
     cat("folder            :", LabBookR.config.folder,"\n")
+    cat("labBook           :", LabBookR.config.labBook,"\n")
     cat("author            :", LabBookR.config.author,"\n")
     cat("dueDate           :", LabBookR.config.dueDate, "\n")
     cat("scheduledDate     :", LabBookR.config.scheduledDate, "\n")

@@ -3,6 +3,8 @@
 List of changes:
 --------------------------------------------------------------------------------
 
+0.1.20: checkLabBook() checks now presenceof labBookConfig file
+0.1.19: Added labBook to the config (in future this should make folder option obsolete)
 0.1.18: Partial argument matching added for addToDo project option
 0.1.17: verbose option added to loadLabBookConfig()
 0.1.16: Default settings for addToDo() added to the LabBookConfig

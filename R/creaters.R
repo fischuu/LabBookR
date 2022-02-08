@@ -7,9 +7,14 @@
 #' @export
 createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", author="Daniel Fischer", output="html+pdf"){
   # Input checks
-  if(is.null(labBook)) stop("Please provide a labBook address")
+  if( exists("LabBookR.config.labBook")){
+    labBook <- LabBookR.config.labBook
+  } else {
+    if(is.null(labBook)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
 
   projects <- list.files(labBook, pattern="*.Rmd")
+
   if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
   if(length(which(projects=="labBook.ToDo.Rmd"))>0) projects <- projects[-which(projects=="labBook.ToDo.Rmd")]
 
@@ -216,8 +221,10 @@ createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", a
 #' @export
 createProjectReport <- function(project=NULL, labBook=NULL){
 # Input checks
-  if(is.null(project)) stop("Please define a project.")
   if(is.null(labBook)) stop("Please provide a labBook address")
+
+  all_projects <- getMyProjects(labBook)
+  project <- match.arg(project, all_projects$title)
 
   rmarkdown::render(file.path(labBook,paste0(project,".Rmd")))
 }
@@ -226,11 +233,24 @@ createProjectReport <- function(project=NULL, labBook=NULL){
 #'
 #' This function creates a new project
 #' @param title Name of the project
-#' @param folder Path to LabBookR folder
+#' @param labBook Path to LabBookR folder
 #' @param author Name of the project report author
 #' @return A blank project file
 #' @export
-createNewProject <- function(title, folder, author){
+createNewProject <- function(title=NULL, labBook=NULL, author=NULL){
+
+  if( exists("LabBookR.config.labBook")){
+    labBook <- LabBookR.config.labBook
+  } else {
+    if(is.null(labBook)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
+  if( exists("LabBookR.config.author")){
+    author <- LabBookR.config.author
+  } else {
+    if(is.null(author)) stop("Please specify an author name or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
   blankProject <- c(
     '---',
     paste0('title: "',title,'"'),
@@ -263,11 +283,11 @@ createNewProject <- function(title, folder, author){
     '```',
     '',
     '# Project initialisation',
-    '[ ] Create a github repository named "Project - Title"',
-    '[ ] Create a CSC project named "Title"',
-    '[ ] Initiate Allas backup for scratch space',
-    '-> script can be found here:',
-    '[ ] Setup Luke project backup for scratch space:',
+    '    [ ] Create a github repository named "Project - Title"',
+    '    [ ] Create a CSC project named "Title"',
+    '    [ ] Initiate Allas backup for scratch space',
+    '    -> script can be found here:',
+    '    [ ] Setup Luke project backup for scratch space:',
     '',
     '# ToDo',
     '',
@@ -275,18 +295,19 @@ createNewProject <- function(title, folder, author){
     ''
   )
   file <- paste0(gsub(" ","_",title), ".Rmd")
-  if(file.exists(file.path(folder, file))){
+  if(file.exists(file.path(labBook, file))){
     stop("Project exists already, nothing was done!")
   } else {
-    fileConn <- file(file.path(folder, file))
+    fileConn <- file(file.path(labBook, file))
     writeLines(blankProject, fileConn)
     close(fileConn)
   }
 }
 
 #' @export
-createLabBookConfig <- function(folder, author, dueDate=28, scheduledDate=21, reqTime="2:00", overwrite=FALSE){
+createLabBookConfig <- function(folder, labBook, author, dueDate=28, scheduledDate=21, reqTime="2:00", overwrite=FALSE){
    LabBookR.config <- data.frame(folder=folder,
+                                 labBook=labBook,
                                  author=author,
                                  dueDate=dueDate,
                                  scheduledDate=scheduledDate,

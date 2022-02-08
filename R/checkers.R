@@ -4,25 +4,25 @@
 #' @return A matrix shoing the test results
 #' @export
 
-checkLabBook <- function(folder){
-  if( exists("LabBookR.config.folder")){
-    folder <- LabBookR.config.folder
+checkLabBook <- function(labBook){
+  if( exists("LabBookR.config.labBook")){
+    labBook <- LabBookR.config.labBook
   } else {
     stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
   }
 
-  cat("Checking for integrity and issues within the LabBook\n")
+  cat("Checking integrity and issues within the LabBook\n")
   cat("----------------------------------------------------\n")
-  cat("Folder     : ")
-  if(file.exists(folder)){
+  cat("labBook                : ")
+  if(file.exists(labBook)){
     cat(paste0("\033[0;32m","found!","\033[0m","\n"))
   } else {
     cat(paste0("\033[0;31m","not found!","\033[0m","\n"))
-    stop("     ",folder, " does not exist!", call.=FALSE)
+    stop("     ",labBook, " does not exist!", call.=FALSE)
   }
 
-  projects <- getMyProjects(folder)
-  cat("ToDo lists : ")
+  projects <- getMyProjects(labBook)
+  cat("ToDo lists             : ")
   if(sum(projects$ToDo=="YES")==nrow(projects)){
     cat(paste0("\033[0;32m","found!","\033[0m","\n"))
   } else {
@@ -33,4 +33,13 @@ checkLabBook <- function(folder){
       }
     }
   }
+
+  cat("labBook-configuration  : ")
+  if(file.exists(file.path(labBook, ".LabBookR.config"))){
+    cat(paste0("\033[0;32m","found!","\033[0m","\n"))
+  } else {
+    cat(paste0("\033[0;31m","not found!","\033[0m","\n"))
+    stop("     labBook configuration file does not exist!", call.=FALSE)
+  }
+
 }
