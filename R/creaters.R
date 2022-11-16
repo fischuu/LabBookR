@@ -50,7 +50,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   }
   # Now get all the available dates
   for(i in 1:length(projects)){
-    addThis <- as.Date(gsub("## ", "", projectRMD[[i]][grep("^##", projectRMD[[i]])]), format="%Y-%m-%d")
+    addThis <- as.Date(gsub("## ", "", projectRMD[[i]][grep("^## ", projectRMD[[i]])]), format="%Y.%m.%d")
     if(sum(is.na(addThis))>0) stop("Malformated date in project:", projects[i])
     availDates <- c(availDates, addThis)
   }
@@ -70,7 +70,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
     tmpProject <- grep(availDates[i], projectRMD)
     newDate <- TRUE
     for(j in 1:length(tmpProject)){
-     dateStart <- grep(paste0("## ",as.character(availDates[i])), projectRMD[[tmpProject[j]]])
+     dateStart <- grep(as.character(gsub("-", ".", availDates[i])), projectRMD[[tmpProject[j]]])
      otherDates <- grep("## ", projectRMD[[tmpProject[j]]])
      dateEnd <- otherDates[min(which(otherDates==dateStart)+1, length(otherDates))]
      if(newDate){
@@ -148,7 +148,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 #' @return A RMarkdown file
 #' @export
 #' @import kableExtra
-createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", author="Daniel Fischer", output="html+pdf"){
+createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO", author="Daniel Fischer", output="html+pdf"){
   # Input checks
   if(is.null(labBook)) stop("Please provide a labBook address")
 
@@ -166,7 +166,8 @@ createTODOreport <- function(labBook=NULL, sortedByDate=TRUE, title="My TODO", a
 
   todo <- getMyTODO(folder=labBook)
 
-#  todo.kbl <- kbl(todo)
+# Sort the table
+  todo <- todo[order(todo[sortedBy]),]
 
   todo.kbl <- todo %>%
                 kbl() %>%

@@ -3,6 +3,7 @@
 List of changes:
 --------------------------------------------------------------------------------
 
+0.1.21: ToDo list is now sortable to predefined coloum names
 0.1.20: checkLabBook() checks now presenceof labBookConfig file
 0.1.19: Added labBook to the config (in future this should make folder option obsolete)
 0.1.18: Partial argument matching added for addToDo project option
