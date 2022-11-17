@@ -148,7 +148,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 #' @return A RMarkdown file
 #' @export
 #' @import kableExtra
-createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO", author="Daniel Fischer", output="html+pdf"){
+createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO", author="Daniel Fischer", output="html+pdf", showNonfinished=TRUE, showFinished=FALSE){
   # Input checks
   if(is.null(labBook)) stop("Please provide a labBook address")
 
@@ -166,7 +166,16 @@ createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO"
 
   todo <- getMyTODO(folder=labBook)
 
-# Sort the table
+# Remove finished and/or non-finished jobs from the list
+  showThose1 <- c()
+  showThose2 <- c()
+  if(showFinished) showThose1 <- which(todo$Finished=="TRUE")
+  if(showNonfinished) showThose2 <- which(todo$Finished=="FALSE")
+  showThose <- c(showThose1, showThose2)
+  if(length(showThose)==0) showThose <- 1:nrow(todo)
+  todo <- todo[showThose,]
+
+  # Sort the table
   todo <- todo[order(todo[sortedBy]),]
 
   todo.kbl <- todo %>%
