@@ -9,11 +9,15 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   # Input checks
   if( exists("LabBookR.config.labBook")){
     labBook <- LabBookR.config.labBook
+    folder <- LabBookR.config.folder
   } else {
     if(is.null(labBook)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
   }
 
-  projects <- list.files(labBook, pattern="*.Rmd")
+  #projects <- list.files(labBook, pattern="*.Rmd")
+  projectsOverview <- read.table(file.path(folder, "labBook.projectOverview.tsv"), sep="\t", header=TRUE)
+  projects <- projectsOverview$Title
+
 
   if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
   if(length(which(projects=="labBook.ToDo.Rmd"))>0) projects <- projects[-which(projects=="labBook.ToDo.Rmd")]
@@ -31,7 +35,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 
   # Import all projects
   for(i in 1:length(projects)){
-    projectRMD[[i]] <- readLines(file.path(labBook, projects[i]))
+    projectRMD[[i]] <- readLines(file.path(labBook, paste0(projects[i], ".Rmd")))
   }
 
   # Filter out all non- Progress related lines
@@ -41,10 +45,10 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 
     if(length(progressStart)==0) stop("There is a problem with the start of the ## Progress notes section in project ", projects[i])
     if(length(progressEnd)==0) stop("There is a problem with the end of the ## Progress notes section in project ", projects[i])
-
     if(progressStart>=progressEnd){
       projectRMD[[i]] <- "NA"
     } else {
+
       projectRMD[[i]] <- projectRMD[[i]][(progressStart+1): progressEnd]
     }
   }
@@ -67,7 +71,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   labBook.out <- c()
   for(i in 1:length(availDates)){
     # Find projects with that particular timestamp and loop through them
-    tmpProject <- grep(availDates[i], projectRMD)
+    tmpProject <- grep(gsub("-", ".", availDates[i]), projectRMD)
     newDate <- TRUE
     for(j in 1:length(tmpProject)){
      dateStart <- grep(as.character(gsub("-", ".", availDates[i])), projectRMD[[tmpProject[j]]])
@@ -148,9 +152,94 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 #' @return A RMarkdown file
 #' @export
 #' @import kableExtra
-createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO", author="Daniel Fischer", output="html+pdf", showNonfinished=TRUE, showFinished=FALSE){
+createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO", author="Daniel Fischer", output="html", showNonfinished=TRUE, showFinished=FALSE){
+# Input checks
+if(is.null(labBook)) stop("Please provide a labBook address")
+
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
+if(output=="html+pdf" || output=="pdf+html"){
+  output_render <- c("html_document","pdf_document")
+} else if (output == "html"){
+  output_render <- c("html_document")
+} else if (output == "pdf"){
+  output_render <- c("pdf_document")
+}
+
+projectsOverview <- read.table(file.path(folder, "labBook.projectOverview.tsv"), sep="\t", header=TRUE)
+projects <- projectsOverview$Title
+
+if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
+if(length(which(projects=="labBook.ToDo.Rmd"))>0) projects <- projects[-which(projects=="labBook.ToDo.Rmd")]
+
+todo <- getMyTODO(folder=labBook)
+
+# Remove finished and/or non-finished jobs from the list
+showThose1 <- c()
+showThose2 <- c()
+if(showFinished) showThose1 <- which(todo$Finished=="TRUE")
+if(showNonfinished) showThose2 <- which(todo$Finished=="FALSE")
+showThose <- c(showThose1, showThose2)
+if(length(showThose)==0) showThose <- 1:nrow(todo)
+todo <- todo[showThose,]
+
+write.table(todo, file.path(folder, "labBook.ToDo.data"), sep="\t", quote=FALSE)
+
+
+todoText <- c('---',
+            paste0('title: "',title,'"'),
+            paste0('author: "',author,'"'),
+            'output:',
+            '  html_document:',
+            '      toc: true',
+            '      toc_depth: 4',
+            '      toc_float:',
+            '        toc_collapsed: true',
+            '  pdf_document:',
+            '      toc: true',
+            '      toc_depth: 4',
+            'number_sections: false',
+            'theme: lumen',
+            'df_print: paged',
+            'code_folding: hide',
+            '---',
+            '',
+            '```{r setup, include=FALSE}',
+            'library("DT")',
+            'knitr::opts_chunk$set(echo = TRUE,',
+            '                      eval = TRUE)',
+            paste0('folder <- "', folder, '"'),
+            '```',
+            '',
+            '```{r, echo=FALSE, include=FALSE}',
+            'todo <- read.table(file.path(folder, "labBook.ToDo.data"), sep="\t", header=TRUE)',
+            '```',
+            '',
+            '```{r, include=TRUE, echo=FALSE}',
+            'datatable(todo)',
+            '```'
+)
+
+fileConn <- file(file.path(labBook, "labBook.ToDo.Rmd"))
+writeLines(todoText, fileConn)
+close(fileConn)
+rmarkdown::render(file.path(labBook, "labBook.ToDo.Rmd"), output_render)
+
+}
+
+createTODOreport_old <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO", author="Daniel Fischer", output="html+pdf", showNonfinished=TRUE, showFinished=FALSE){
   # Input checks
   if(is.null(labBook)) stop("Please provide a labBook address")
+
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
 
   if(output=="html+pdf" || output=="pdf+html"){
     output_render <- c("html_document","pdf_document")
@@ -160,13 +249,17 @@ createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO"
     output_render <- c("pdf_document")
   }
 
-  projects <- list.files(labBook, pattern="*.Rmd")
+  #projects <- list.files(labBook, pattern="*.Rmd")
+
+  projectsOverview <- read.table(file.path(folder, "labBook.projectOverview.tsv"), sep="\t", header=TRUE)
+  projects <- projectsOverview$Title
+
   if(length(which(projects=="labBook.complete.Rmd"))>0) projects <- projects[-which(projects=="labBook.complete.Rmd")]
   if(length(which(projects=="labBook.ToDo.Rmd"))>0) projects <- projects[-which(projects=="labBook.ToDo.Rmd")]
 
   todo <- getMyTODO(folder=labBook)
 
-# Remove finished and/or non-finished jobs from the list
+  # Remove finished and/or non-finished jobs from the list
   showThose1 <- c()
   showThose2 <- c()
   if(showFinished) showThose1 <- which(todo$Finished=="TRUE")
@@ -179,8 +272,8 @@ createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO"
   todo <- todo[order(todo[sortedBy]),]
 
   todo.kbl <- todo %>%
-                kbl() %>%
-                kable_styling()
+    kbl() %>%
+    kable_styling()
 
   labBook.out <- c("\n", todo.kbl,"\n")
 
@@ -208,11 +301,11 @@ createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO"
               '```',
               '',
               '<style type="text/css">',
-                'div.main-container {',
-                  'max-width: 1800px;',
-                  'margin-left: auto;',
-                  'margin-right: auto;',
-                '}',
+              'div.main-container {',
+              'max-width: 1800px;',
+              'margin-left: auto;',
+              'margin-right: auto;',
+              '}',
               '</style>'
   )
   labBook.out <- c(header,labBook.out)
@@ -230,13 +323,24 @@ createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO"
 #' @return A RMarkdown dfile
 #' @export
 createProjectReport <- function(project=NULL, labBook=NULL){
-# Input checks
-  if(is.null(labBook)) stop("Please provide a labBook address")
+  if( exists("LabBookR.config.labBook")){
+    labBook <- LabBookR.config.labBook
+  } else {
+    if(is.null(labBook)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
 
   all_projects <- getMyProjects(labBook)
-  project <- match.arg(project, all_projects$title)
 
-  rmarkdown::render(file.path(labBook,paste0(project,".Rmd")))
+  if(is.null(project)){
+    for(i in 1:length(all_projects$title)){
+      rmarkdown::render(file.path(labBook,paste0(all_projects$title[i],".Rmd")))
+    }
+  } else {
+    project <- match.arg(project, all_projects$title)
+    rmarkdown::render(file.path(labBook,paste0(project,".Rmd")))
+  }
+
+
 }
 
 #' Create a new project
@@ -280,30 +384,37 @@ createNewProject <- function(title=NULL, labBook=NULL, author=NULL){
     '```{r setup, include=FALSE}',
     'knitr::opts_chunk$set(echo = TRUE,',
     '                      eval = FALSE)',
+    paste0('title <- "', title,'"'),
     '```',
-    '```{bash, echo=FALSE, include=FALSE}',
-    '# Instructions to enter ToDo-list items',
-    '# Follow the format:',
-    '@ IncomingDate @ DueDate @ PlannedDate @ RequiredTime @ Ready @ Description',
-    '@ YYYY.MM.DD @ YYYY.MM.DD @ YYYY.MM.DD @ h:mm @ logical @ Free text',
     '',
-    '# Subprojects, just intent 4 whitespaces like this:',
-    '@ YYYY.MM.DD @ YYYY.MM.DD @ YYYY.MM.DD @ h:mm @ TRUE/FALSE @ Main task',
-    '    @ YYYY.MM.DD @ YYYY.MM.DD @ YYYY.MM.DD @ h:mm @ TRUE/FALSE @ subtask',
-    '```',
+    '```{bash, echo=FALSE, include=FALSE}',
     '',
     '# Project initialisation',
-    '    [ ] Create a github repository named "Project - Title"',
-    '    [ ] Create a CSC project named "Title"',
-    '    [ ] Initiate Allas backup for scratch space',
-    '    -> script can be found here:',
-    '    [ ] Setup Luke project backup for scratch space:',
+    '| Task Description                                        | Completed   |',
+    '|---------------------------------------------------------|-------------|',
+    '| Create a LabBookR project file                          | &#10004;    |',
+    '| Create a GitHub repository named "Project - Title"      | &#10060;    |',
+    '| Create a CSC project named "Title"                      | &#10060;    |',
+    '| Initiate Allas backup for scratch space                 | &#10060;    |',
+    '| Setup Luke project backup for scratch space             | &#10060;    |',
+    '```',
+    '',
+    '# Project overview',
     '',
     '# ToDo',
+    '',
+    '```{r, eval=TRUE, echo=FALSE, include=FALSE}',
+    'toDo <- read.table(paste0(title,".todo.tsv"), header=TRUE, sep="\t")',
+    '```',
+    '',
+    '```{r, eval=TRUE, echo=FALSE, include=TRUE}',
+    'DT::datatable(toDo)',
+    '```',
     '',
     '# Progress Notes',
     ''
   )
+# Create progress file
   file <- paste0(gsub(" ","_",title), ".Rmd")
   if(file.exists(file.path(labBook, file))){
     stop("Project exists already, nothing was done!")
@@ -312,6 +423,32 @@ createNewProject <- function(title=NULL, labBook=NULL, author=NULL){
     writeLines(blankProject, fileConn)
     close(fileConn)
   }
+
+# Create project-specific ToDo file
+  toDo <- data.frame(Incoming=character(),
+                     Due=character(),
+                     Scheduled=character(),
+                     RequiredTime=character(),
+                     Priority=character(),
+                     ParentGroup=character(),
+                     Finished=character(),
+                     Task=character()
+  )
+  write.table(toDo, file=file.path(labBook, gsub(".Rmd", ".todo.tsv", file)), quote=FALSE, sep="\t")
+
+# Create/Add to project overview
+  projectData <- data.frame(Incoming=date(),
+                            Title=title,
+                            Active=TRUE)
+
+# Create progress file
+  if(file.exists(file.path(labBook, "labBook.projectOverview.tsv"))){
+    tmp <- read.table(file.path(labBook, "labBook.projectOverview.tsv"), header=TRUE, sep="\t")
+    write.table(rbind(tmp, projectData), file=file.path(labBook, "labBook.projectOverview.tsv"), sep="\t", quote=FALSE)
+  } else {
+    write.table(projectData, file=file.path(labBook, "labBook.projectOverview.tsv"), sep="\t", quote=FALSE)
+  }
+
 }
 
 #' @export
@@ -332,5 +469,5 @@ createLabBookConfig <- function(folder, labBook, author, dueDate=28, scheduledDa
    } else {
      write.table(LabBookR.config, file=file.path(folder, ".LabBookR.config"))
    }
-}
 
+}

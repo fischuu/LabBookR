@@ -12,6 +12,27 @@ getMyProjects <-  function(folder){
     if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
   }
 
+  projectFile <- read.table(file.path(folder, "labBook.projectOverview.tsv"), stringsAsFactors = FALSE, sep="\t")
+
+  projects <- data.frame(title=projectFile$Title,
+                         ToDo="YES",
+                         file=paste0(projectFile$Title, ".Rmd"),
+                         Active=projectFile$Active,
+                         Created=projectFile$Incoming,
+                         stringsAsFactors=FALSE)
+
+
+  projects
+}
+
+getMyProjects_old <-  function(folder){
+
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
   projectFiles <- list.files(folder, pattern = "*.Rmd")
 
   projects.list <- list()
@@ -52,7 +73,55 @@ getToDo.internal <- function(x){
 }
 
 #' @export
-getMyTODO <- function(folder=NA, verbose=TRUE, sorting=c("Incoming", "Due", "Scheduled")){
+getMyTODO <- function(folder=NA, verbose=TRUE, sorting="Incoming", active_only=TRUE){
+
+  sorting <- match.arg(sorting, choices = c("Incoming", "Due", "Scheduled"))
+
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    if(is.na(folder)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
+  if(active_only) cat("Tasks are only printed for active projects. For a complete list, set active_only=FALSE \n")
+
+  output <- c()
+  projects <- getMyProjects(folder)
+
+  ToDo <- read.table(file.path(folder, paste0(projects$title[1],".todo.tsv")), stringsAsFactors = FALSE, sep="\t", header=TRUE)
+  if(nrow(ToDo)>0){
+    ToDo$Project <- projects$title[1]
+  }
+
+  for(i in 2:nrow(projects)){
+    tmp.ToDo <- read.table(file.path(folder, paste0(projects$title[i],".todo.tsv")), stringsAsFactors = FALSE, sep="\t", header=TRUE)
+    if(nrow(tmp.ToDo)>0) tmp.ToDo$Project <- projects$title[i]
+    ToDo <- rbind(ToDo, tmp.ToDo)
+  }
+
+  ToDo[,1] <- as.Date(ToDo[,1], format="%Y.%m.%d")
+  ToDo[,2] <- as.Date(ToDo[,2], format="%Y.%m.%d")
+  ToDo[,3] <- as.Date(ToDo[,3], format="%Y.%m.%d")
+
+  if(sorting=="Incoming"){
+    ToDo <- ToDo[order(ToDo[,1]),]
+  } else if (sorting=="Due"){
+    ToDo <- ToDo[order(ToDo[,2]),]
+  } else if(sorting=="Scheduled"){
+    ToDo <- ToDo[order(ToDo[,3]),]
+  }
+
+  active_projects <- projects$title[projects$Active]
+
+  if(active_only){
+    ToDo <- ToDo[is.element(ToDo$Project, active_projects),]
+  }
+
+  rownames(ToDo) <- NULL
+  ToDo
+}
+
+getMyTODO_old <- function(folder=NA, verbose=TRUE, sorting=c("Incoming", "Due", "Scheduled")){
 
    if( exists("LabBookR.config.folder")){
      folder <- LabBookR.config.folder
