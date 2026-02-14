@@ -1,6 +1,6 @@
 Package: LabBookR
 Title: Organising Labnotes and ToDos via R
-Version: 0.1.24
+Version: 0.3.5
 Authors@R: 
     person("Daniel", "Fischer", , "daniel.fischer@luke.fi", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
@@ -9,4 +9,4 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3

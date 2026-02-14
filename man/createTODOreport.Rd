@@ -6,10 +6,12 @@
 \usage{
 createTODOreport(
   labBook = NULL,
-  sortedByDate = TRUE,
+  sortedBy = "Scheduled",
   title = "My TODO",
   author = "Daniel Fischer",
-  output = "html+pdf"
+  output = "html",
+  showNonfinished = TRUE,
+  showFinished = FALSE
 )
 }
 \arguments{

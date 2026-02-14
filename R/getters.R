@@ -88,20 +88,23 @@ getMyTODO <- function(folder=NA, verbose=TRUE, sorting="Incoming", active_only=T
   output <- c()
   projects <- getMyProjects(folder)
 
-  ToDo <- read.table(file.path(folder, paste0(projects$title[1],".todo.tsv")), stringsAsFactors = FALSE, sep="\t", header=TRUE)
+  ToDo <- read.table(file.path(folder, projects$title[1], paste0(projects$title[1],".todo.tsv")), stringsAsFactors = FALSE, sep="\t", header=TRUE)
   if(nrow(ToDo)>0){
     ToDo$Project <- projects$title[1]
   }
 
   for(i in 2:nrow(projects)){
-    tmp.ToDo <- read.table(file.path(folder, paste0(projects$title[i],".todo.tsv")), stringsAsFactors = FALSE, sep="\t", header=TRUE)
+    tmp.ToDo <- read.table(file.path(folder, projects$title[i], paste0(projects$title[i],".todo.tsv")), stringsAsFactors = FALSE, sep="\t", header=TRUE)
     if(nrow(tmp.ToDo)>0) tmp.ToDo$Project <- projects$title[i]
     ToDo <- rbind(ToDo, tmp.ToDo)
   }
 
-  ToDo[,1] <- as.Date(ToDo[,1], format="%Y.%m.%d")
-  ToDo[,2] <- as.Date(ToDo[,2], format="%Y.%m.%d")
-  ToDo[,3] <- as.Date(ToDo[,3], format="%Y.%m.%d")
+  ToDo[,1] <- as.Date(ToDo[,1], format="%Y-%m-%d")
+  ToDo[,2] <- as.Date(ToDo[,2], format="%Y-%m-%d")
+  ToDo[,3] <- as.Date(ToDo[,3], format="%Y-%m-%d")
+  ToDo[,4] <- fixTime(ToDo[,4])
+  ToDo[,5] <- toupper(ToDo[,5])
+  ToDo[,6] <- toupper(ToDo[,6])
 
   if(sorting=="Incoming"){
     ToDo <- ToDo[order(ToDo[,1]),]
@@ -162,9 +165,9 @@ getMyTODO_old <- function(folder=NA, verbose=TRUE, sorting=c("Incoming", "Due", 
      }
    }
 
-   output[,1] <- as.Date(output[,1], format="%Y.%m.%d")
-   output[,2] <- as.Date(output[,2], format="%Y.%m.%d")
-   output[,3] <- as.Date(output[,3], format="%Y.%m.%d")
+   output[,1] <- as.Date(output[,1], format="%Y-%m-%d")
+   output[,2] <- as.Date(output[,2], format="%Y-%m-%d")
+   output[,3] <- as.Date(output[,3], format="%Y-%m-%d")
 
    if(sorting=="Incoming"){
      output <- output[order(output[,1]),]
@@ -191,18 +194,18 @@ getTasksPerWeek <- function(folder=NA, plot=TRUE){
   years <- unique(format(TODO$Incoming, "%Y"))
 
   incoming.week <- format(TODO$Incoming, "%V")
-  due.week <- format(TODO$DueData, "%V")
+  due.week <- format(TODO$Due, "%V")
   scheduled.week <- format(TODO$Scheduled, "%V")
 
   incoming.year <- format(TODO$Incoming, "%Y")
-  due.year <- format(TODO$DueData, "%Y")
+  due.year <- format(TODO$Due, "%Y")
   scheduled.year <- format(TODO$Scheduled, "%Y")
 
   incoming <- paste0(incoming.year,".",incoming.week)
   due <- paste0(due.year,".",due.week)
   scheduled <- paste0(scheduled.year,".",scheduled.week)
 
-  time.formatted <- as.POSIXlt(TODO$TimeReq,format="%H:%M")
+  time.formatted <- as.POSIXlt(TODO$RequiredTime,format="%H:%M")
 
   time <- (time.formatted$hour*60 + time.formatted$min)/60
 
@@ -227,3 +230,96 @@ getTasksPerWeek <- function(folder=NA, plot=TRUE){
 }
 
 
+#' @export
+getTasksForToday <- function(folder=NA, workhours=5, method="greedy", includeOverdue=TRUE){
+
+  work_left <- workhours * 60
+
+  if( exists("LabBookR.config.folder")){
+    folder <- LabBookR.config.folder
+  } else {
+    if(is.na(folder))stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
+  TODO <- getMyTODO(folder=folder, verbose=FALSE)
+
+  today <- Sys.Date()
+
+  # First, print everything that is scheduled for today
+  takeThose <- which(TODO$Scheduled==today)
+
+  # Check how much work is scheduled for today and if we can add something
+  scheduled_work <- 0
+  if(length(takeThose)>0){
+    for(i in 1:length(takeThose)){
+      scheduled_work <- scheduled_work + timeInMinutes(TODO$RequiredTime[i])
+    }
+  }
+
+# Adjust the time we have left for today
+  work_left <- work_left - scheduled_work
+
+  # Now check if there is overdue tasks and add those
+  if(includeOverdue){
+    overdue <- which(TODO$Due < today & TODO$Finished=="FALSE")
+
+    overdue_work <- 0
+
+    if(length(overdue)>0){
+
+      for(i in overdue){
+        if((work_left - overdue_work - timeInMinutes(TODO$RequiredTime[i])) >=0){
+          overdue_work <- overdue_work + timeInMinutes(TODO$RequiredTime[i])
+          takeThose <- c(takeThose, i)
+        } else {
+          warning("Task ", TODO$Description[i], " is overdue but cannot be added to today's schedule due to time constraints.")
+        }
+      }
+
+    }
+  }
+
+  work_left <- work_left - overdue_work
+
+# Now add unscheduled work, if worling time is available
+
+  if(work_left > 0){
+  # Extract unscheduled work
+    us_work <- TODO[is.na(TODO$Scheduled),]
+  # Extract the expected times and the task ID
+    reqtime.tmp <- sapply(us_work$RequiredTime, timeInMinutes)
+    reqtime <- cbind(reqtime.tmp, 1:length(reqtime.tmp))
+
+  # Now get the tasks that fit into the remaining work time
+
+  # Sort first the time/task matrix according to the method
+    if(method=="greedy"){
+      reqtime <- reqtime[order(reqtime[,1], decreasing=TRUE),]
+    } else if(method=="random"){
+      reqtime <- reqtime[sample(1:nrow(reqtime)),]
+    } else if(method=="many"){
+      reqtime <- reqtime[order(reqtime[,1], decreasing = FALSE),]
+    }
+
+    addThose <- c()
+    for(i in 1:nrow(reqtime)){
+      if(work_left - reqtime[i,1] >= 0){
+        # Check if we have already added this task as overdue, if not add it and adjust the time left
+        if(!is.element(reqtime[i,2], takeThose)){
+          addThose <- c(addThose, reqtime[i,2])
+          work_left <- work_left - reqtime[i,1]
+        }
+      } else {
+        break
+      }
+    }
+
+    out <- TODO[c(takeThose, addThose),]
+
+  } else {
+    out <- TODO[takeThose,]
+  }
+
+  out
+
+}

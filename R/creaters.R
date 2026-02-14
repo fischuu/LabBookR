@@ -35,7 +35,7 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 
   # Import all projects
   for(i in 1:length(projects)){
-    projectRMD[[i]] <- readLines(file.path(labBook, paste0(projects[i], ".Rmd")))
+    projectRMD[[i]] <- readLines(file.path(labBook, projects[i], paste0(projects[i], ".Rmd")))
   }
 
   # Filter out all non- Progress related lines
@@ -54,7 +54,10 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
   }
   # Now get all the available dates
   for(i in 1:length(projects)){
-    addThis <- as.Date(gsub("## ", "", projectRMD[[i]][grep("^## ", projectRMD[[i]])]), format="%Y.%m.%d")
+    tmp <- gsub("## ", "", projectRMD[[i]][grep("^## ", projectRMD[[i]])])
+    tmp_date <- sub("\\s.*$", "", tmp)
+
+    addThis <- as.Date(tmp_date, format="%Y-%m-%d")
     if(sum(is.na(addThis))>0) stop("Malformated date in project:", projects[i])
     availDates <- c(availDates, addThis)
   }
@@ -154,7 +157,13 @@ createLabBook <- function(labBook=NULL, sortedByDate=TRUE, title="My LabBook", a
 #' @import kableExtra
 createTODOreport <- function(labBook=NULL, sortedBy="Scheduled", title="My TODO", author="Daniel Fischer", output="html", showNonfinished=TRUE, showFinished=FALSE){
 # Input checks
-if(is.null(labBook)) stop("Please provide a labBook address")
+  if( exists("LabBookR.config.labBook")){
+    labBook <- LabBookR.config.labBook
+  } else {
+    if(is.null(labBook)) stop("Please specify the LabBook folder or load your LabBook configuration via `loadLabBookConfig(...)`")
+  }
+
+#if(is.null(labBook)) stop("Please provide a labBook address")
 
   if( exists("LabBookR.config.folder")){
     folder <- LabBookR.config.folder
@@ -181,8 +190,8 @@ todo <- getMyTODO(folder=labBook)
 # Remove finished and/or non-finished jobs from the list
 showThose1 <- c()
 showThose2 <- c()
-if(showFinished) showThose1 <- which(todo$Finished=="TRUE")
-if(showNonfinished) showThose2 <- which(todo$Finished=="FALSE")
+if(showFinished) showThose1 <- which(toupper(todo$Finished)=="TRUE")
+if(showNonfinished) showThose2 <- which(toupper(todo$Finished)=="FALSE")
 showThose <- c(showThose1, showThose2)
 if(length(showThose)==0) showThose <- 1:nrow(todo)
 todo <- todo[showThose,]
@@ -333,11 +342,11 @@ createProjectReport <- function(project=NULL, labBook=NULL){
 
   if(is.null(project)){
     for(i in 1:length(all_projects$title)){
-      rmarkdown::render(file.path(labBook,paste0(all_projects$title[i],".Rmd")))
+      rmarkdown::render(file.path(labBook, all_projects$title[i], paste0(all_projects$title[i],".Rmd")))
     }
   } else {
     project <- match.arg(project, all_projects$title)
-    rmarkdown::render(file.path(labBook,paste0(project,".Rmd")))
+    rmarkdown::render(file.path(labBook, project, paste0(project,".Rmd")))
   }
 
 
@@ -416,10 +425,14 @@ createNewProject <- function(title=NULL, labBook=NULL, author=NULL){
   )
 # Create progress file
   file <- paste0(gsub(" ","_",title), ".Rmd")
-  if(file.exists(file.path(labBook, file))){
+  folder <- gsub(".Rmd", "", file)
+  if(dir.exists(file.path(labBook, folder))){
     stop("Project exists already, nothing was done!")
   } else {
-    fileConn <- file(file.path(labBook, file))
+    dir.create(folder)
+    dir.create(file.path(folder, "Files"))
+
+    fileConn <- file(file.path(labBook, folder, file))
     writeLines(blankProject, fileConn)
     close(fileConn)
   }
@@ -430,11 +443,10 @@ createNewProject <- function(title=NULL, labBook=NULL, author=NULL){
                      Scheduled=character(),
                      RequiredTime=character(),
                      Priority=character(),
-                     ParentGroup=character(),
                      Finished=character(),
                      Task=character()
   )
-  write.table(toDo, file=file.path(labBook, gsub(".Rmd", ".todo.tsv", file)), quote=FALSE, sep="\t")
+  write.table(toDo, file=file.path(labBook, folder, gsub(".Rmd", ".todo.tsv", file)), quote=FALSE, sep="\t")
 
 # Create/Add to project overview
   projectData <- data.frame(Incoming=date(),

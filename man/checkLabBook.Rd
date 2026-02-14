@@ -4,7 +4,7 @@
 \alias{checkLabBook}
 \title{Check lab book}
 \usage{
-checkLabBook(folder)
+checkLabBook(labBook)
 }
 \value{
 A matrix shoing the test results

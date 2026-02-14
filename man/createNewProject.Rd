@@ -4,12 +4,12 @@
 \alias{createNewProject}
 \title{Create a new project}
 \usage{
-createNewProject(title, folder, author)
+createNewProject(title = NULL, labBook = NULL, author = NULL)
 }
 \arguments{
 \item{title}{Name of the project}
 
-\item{folder}{Path to LabBookR folder}
+\item{labBook}{Path to LabBookR folder}
 
 \item{author}{Name of the project report author}
 }

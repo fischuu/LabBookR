@@ -3,6 +3,8 @@
 List of changes:
 --------------------------------------------------------------------------------
 0.3.*:
+5: Harmonised required time input
+4: capitalisation insensitive todo true/false check
 3: Project overview file added
 2: Individual project-specifi ToDo list files added
 1: Restructering of system files, not compatible anymore with previous versions
