@@ -1,4 +1,9 @@
 fixTime.internal <-  function(time){
+
+  is_numeric_like <- function(x) {
+    !is.na(suppressWarnings(as.numeric(x)))
+  }
+
  # Check if we have the correct format, first check if colons are present
   if(length(grep(":", time))>0){
 
@@ -33,19 +38,25 @@ fixTime.internal <-  function(time){
     }
   } else {
     # expect single value followed by h
-    if(grep("h", time)==1){
+    if(length(grep("h", time))==1){
       out <- paste0(gsub("h", "", time), ":00")
-    } else if(grep("m", time)==1){
+    } else if(length(grep("m", time))==1){
           minutes <- as.numeric(gsub("m", "", time))
           hours <- minutes%/%60
           minutes <- minutes%%60
           if(nchar(minutes)==1) minutes <- paste0("0", minutes)
           out <- paste0(hours, ":", minutes)
-    } else if(grep("d", time)==1){
+    } else if(length(grep("d", time))==1){
             out <- paste0(as.numeric(gsub("d", "", time))*8, ":00")
-    } else if(is.numeric(time)){
+    } else if(is_numeric_like(time)){
     # We assume a single numeric value representing hours
-      out <- paste0(time, ":00")
+    # Format a numeric values of hours into hh:mm format
+      time <- as.numeric(time)
+      minutes <- time * 60
+      hours <- minutes%/%60
+      minutes <- minutes%%60
+      if(nchar(minutes)==1) minutes <- paste0("0", minutes)
+      out <- paste0(hours, ":", minutes)
     } else {
     stop("Malformatted time entry: ", time)
     }

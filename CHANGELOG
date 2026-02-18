@@ -3,6 +3,8 @@
 List of changes:
 --------------------------------------------------------------------------------
 0.3.*:
+7: Added a timesheet file
+6: Added the milestone idea to the projects
 5: Harmonised required time input
 4: capitalisation insensitive todo true/false check
 3: Project overview file added

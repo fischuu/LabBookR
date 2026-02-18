@@ -93,8 +93,22 @@ getMyTODO <- function(folder=NA, verbose=TRUE, sorting="Incoming", active_only=T
     ToDo$Project <- projects$title[1]
   }
 
+  fix.tmpDo <- function(x){
+   # Check first, if x has 8 columns and if not, fill up with NA
+    if(ncol(x)<7){
+      x <- cbind(x, matrix(NA, nrow=nrow(x), ncol=7-ncol(x)))
+    }
+    x
+  }
+
   for(i in 2:nrow(projects)){
+    cat("Project: ", projects$title[i], "\n")
     tmp.ToDo <- read.table(file.path(folder, projects$title[i], paste0(projects$title[i],".todo.tsv")), stringsAsFactors = FALSE, sep="\t", header=TRUE)
+    if(nrow(tmp.ToDo)>0){
+      for(j in 1:nrow(tmp.ToDo)){
+        tmp.ToDo[j,] <- fix.tmpDo(tmp.ToDo[j,])
+      }
+    }
     if(nrow(tmp.ToDo)>0) tmp.ToDo$Project <- projects$title[i]
     ToDo <- rbind(ToDo, tmp.ToDo)
   }

@@ -444,9 +444,20 @@ createNewProject <- function(title=NULL, labBook=NULL, author=NULL){
                      RequiredTime=character(),
                      Priority=character(),
                      Finished=character(),
-                     Task=character()
+                     Task=character(),
+                     Milestone=character()
   )
   write.table(toDo, file=file.path(labBook, folder, gsub(".Rmd", ".todo.tsv", file)), quote=FALSE, sep="\t")
+
+# Create project-specific Milestone file
+  ms <- data.frame(ID=character(),
+                     Incoming=character(),
+                     Due=character(),
+                     RequiredTime=character(),
+                     Finished=character(),
+                     Description=character()
+  )
+  write.table(ms, file=file.path(labBook, folder, gsub(".Rmd", ".ms.tsv", file)), quote=FALSE, sep="\t")
 
 # Create/Add to project overview
   projectData <- data.frame(Incoming=date(),
@@ -480,6 +491,15 @@ createLabBookConfig <- function(folder, labBook, author, dueDate=28, scheduledDa
      }
    } else {
      write.table(LabBookR.config, file=file.path(folder, ".LabBookR.config"))
+
+     # Create the time sheet template
+     timeSheet <- data.frame(Date=character(),
+                             Start=character(),
+                             End=character(),
+                             Project=character(),
+                             Milestone=character(),
+                             stringsAsFactors = FALSE)
+     write.table(timeSheet, file=file.path(folder, "labBook.timeSheet.tsv"), quote=FALSE, sep="\t")
    }
 
 }
